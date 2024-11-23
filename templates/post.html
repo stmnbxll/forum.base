@@ -13,17 +13,25 @@
         </nav>
 
         <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{{ url_for('profile', username=post.author.username) }}" class="text-decoration-none text-dark">
+                        <img src="{{ url_for('static', filename=post.author.avatar) }}" 
+                             class="rounded-circle me-2" 
+                             style="width: 32px; height: 32px; object-fit: cover;" 
+                             alt="Avatar">
+                        {{ post.author.username }}
+                    </a>
+                    {% if post.author.is_admin %}
+                        <span class="admin-icon" title="Администратор">👑</span>
+                    {% endif %}
+                </div>
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
+                </small>
+            </div>
             <div class="card-body">
                 <h1 class="card-title">{{ post.title }}</h1>
-                <div class="text-muted mb-3">
-                    <span class="username-with-badge">
-                        <i class="bi bi-person"></i> {{ post.author.username }}
-                        {% if post.author.is_admin %}
-                            <span class="admin-icon" title="Администратор">👑</span>
-                        {% endif %}
-                    </span>
-                    <i class="bi bi-clock ms-3"></i> {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
-                </div>
                 <p class="card-text">{{ post.content }}</p>
                 {% if current_user.is_authenticated and (post.author == current_user or current_user.is_admin) %}
                 <div class="mt-3">
@@ -61,18 +69,29 @@
                 {% for comment in post.comments|sort(attribute='date_posted', reverse=true) %}
                 <div class="card mb-2">
                     <div class="card-body">
-                        <p class="card-text">{{ comment.content }}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
+                        <div class="d-flex align-items-center mb-2">
+                            <a href="{{ url_for('profile', username=comment.author.username) }}" class="text-decoration-none text-dark">
+                                <img src="{{ url_for('static', filename=comment.author.avatar) }}" 
+                                     class="rounded-circle me-2" 
+                                     style="width: 24px; height: 24px; object-fit: cover;" 
+                                     alt="Avatar">
                                 {{ comment.author.username }}
-                                {% if comment.author.is_admin %}
-                                    <i class="bi bi-crown text-warning" title="Администратор"></i>
-                                {% endif %}
-                            </small>
-                            <small class="text-muted">
-                                <i class="bi bi-clock"></i> {{ comment.date_posted.strftime('%d.%m.%Y %H:%M') }}
-                            </small>
+                            </a>
+                            {% if comment.author.is_admin %}
+                                <span class="admin-icon ms-1" title="Администратор">👑</span>
+                            {% endif %}
+                            <small class="text-muted ms-2">{{ comment.date_posted.strftime('%d.%m.%Y %H:%M') }}</small>
                         </div>
+                        <p class="card-text">{{ comment.content }}</p>
+                        {% if current_user.is_authenticated and (current_user.is_admin or current_user.id == comment.author.id) %}
+                        <div class="btn-group">
+                            <form action="{{ url_for('delete_comment', post_id=post.id, comment_id=comment.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены, что хотите удалить этот комментарий?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% else %}

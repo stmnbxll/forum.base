@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать профиль{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Редактировать профиль</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Текущий аватар -->
+                        <div class="text-center mb-4">
+                            <img src="{{ url_for('static', filename=current_user.avatar) }}" 
+                                 class="rounded-circle mb-3" 
+                                 style="width: 150px; height: 150px; object-fit: cover;"
+                                 alt="Текущий аватар">
+                            <div class="mb-3">
+                                <label for="avatar" class="form-label">Изменить аватар</label>
+                                <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
+                            </div>
+                        </div>
+
+                        <!-- О себе -->
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">О себе</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ current_user.bio or '' }}</textarea>
+                        </div>
+
+                        <!-- Местоположение -->
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Местоположение</label>
+                            <input type="text" class="form-control" id="location" name="location" 
+                                   value="{{ current_user.location or '' }}" placeholder="Например: Москва, Россия">
+                        </div>
+
+                        <!-- Веб-сайт -->
+                        <div class="mb-3">
+                            <label for="website" class="form-label">Веб-сайт</label>
+                            <input type="url" class="form-control" id="website" name="website" 
+                                   value="{{ current_user.website or '' }}" placeholder="https://example.com">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Сохранить изменения
+                            </button>
+                            <a href="{{ url_for('profile', username=current_user.username) }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

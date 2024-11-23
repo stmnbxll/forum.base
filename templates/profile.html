@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Профиль -->
+        <div class="col-md-4">
+            <div class="card">
+                <img src="{{ url_for('static', filename=user.avatar) }}" 
+                     class="card-img-top"
+                     style="height: 300px; object-fit: cover;"
+                     alt="Аватар">
+                <div class="card-body">
+                    <h4 class="card-title d-flex align-items-center">
+                        {{ user.username }}
+                        {% if user.is_admin %}
+                            <span class="admin-icon" title="Администратор">👑</span>
+                        {% endif %}
+                    </h4>
+                    {% if user.bio %}
+                        <p class="card-text">{{ user.bio }}</p>
+                    {% endif %}
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-calendar"></i> Регистрация: {{ user.date_registered.strftime('%d.%m.%Y') }}
+                        </li>
+                        {% if user.location %}
+                            <li class="list-group-item">
+                                <i class="bi bi-geo-alt"></i> {{ user.location }}
+                            </li>
+                        {% endif %}
+                        {% if user.website %}
+                            <li class="list-group-item">
+                                <i class="bi bi-link"></i> 
+                                <a href="{{ user.website }}" target="_blank">{{ user.website }}</a>
+                            </li>
+                        {% endif %}
+                        {% if user.last_seen %}
+                            <li class="list-group-item">
+                                <i class="bi bi-clock"></i> Последний визит: {{ user.last_seen.strftime('%d.%m.%Y %H:%M') }}
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h5>{{ user.get_posts_count() }}</h5>
+                                <small class="text-muted">Постов</small>
+                            </div>
+                            <div class="col-6">
+                                <h5>{{ user.get_comments_count() }}</h5>
+                                <small class="text-muted">Комментариев</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.username == user.username %}
+                        <div class="card-body">
+                            <a href="{{ url_for('edit_profile') }}" class="btn btn-primary w-100">
+                                <i class="bi bi-pencil"></i> Редактировать профиль
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Посты пользователя -->
+        <div class="col-md-8">
+            <h3>Посты пользователя</h3>
+            {% if posts %}
+                {% for post in posts %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ post.title }}</h5>
+                            <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
+                                    <i class="bi bi-chat ms-2"></i> {{ post.comments|length }} комментариев
+                                </small>
+                                <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-sm btn-primary">
+                                    Читать далее
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Пользователь ещё не создал ни одного поста.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

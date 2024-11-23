@@ -92,9 +92,9 @@
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <span class="nav-link">
+                        <a class="nav-link" href="{{ url_for('profile', username=current_user.username) }}">
                             <i class="bi bi-person"></i> {{ current_user.username }}
-                        </span>
+                        </a>
                     </li>
                     {% if current_user.is_admin %}
                     <li class="nav-item">
@@ -103,11 +103,6 @@
                         </a>
                     </li>
                     {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('new_post') }}">
-                            <i class="bi bi-plus-circle"></i> Создать пост
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">
                             <i class="bi bi-box-arrow-right"></i> Выйти ({{ current_user.username }})

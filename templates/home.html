@@ -7,23 +7,39 @@
     <div class="col-md-8">
         <h1 class="mb-4">Последние посты</h1>
         {% for post in posts %}
-        <div class="card post-card mb-4">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{{ url_for('profile', username=post.author.username) }}" class="text-decoration-none text-dark">
+                        <img src="{{ url_for('static', filename=post.author.avatar) }}" 
+                             class="rounded-circle me-2" 
+                             style="width: 32px; height: 32px; object-fit: cover;" 
+                             alt="Avatar">
+                        {{ post.author.username }}
+                    </a>
+                    {% if post.author.is_admin %}
+                        <span class="admin-icon" title="Администратор">👑</span>
+                    {% endif %}
+                </div>
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
+                </small>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">{{ post.title }}</h5>
-                <p class="text-muted">
-                    <span class="username-with-badge">
-                        <i class="bi bi-person"></i> {{ post.author.username }}
-                        {% if post.author.is_admin %}
-                            <span class="admin-icon" title="Администратор">👑</span>
-                        {% endif %}
-                    </span>
-                    <i class="bi bi-clock ms-2"></i> {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
-                    <i class="bi bi-chat ms-2"></i> {{ post.comments|length }} комментариев
-                </p>
+                <h5 class="card-title">
+                    <a href="{{ url_for('post', post_id=post.id) }}" class="text-decoration-none text-dark">
+                        {{ post.title }}
+                    </a>
+                </h5>
                 <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
-                <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">
-                    <i class="bi bi-book"></i> Читать далее
-                </a>
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary btn-sm">
+                        Читать далее
+                    </a>
+                    <small class="text-muted">
+                        <i class="bi bi-chat"></i> {{ post.comments|length }} комментариев
+                    </small>
+                </div>
             </div>
         </div>
         {% else %}

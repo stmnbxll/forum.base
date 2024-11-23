@@ -2,10 +2,55 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
+import time
+from PIL import Image
+import io
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret-key'  # Измените на реальный секретный ключ
+app.config['SECRET_KEY'] = 'secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///forum.db'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB макс размер файла
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'avatars')
+
+# Создаем папку для аватаров, если её нет
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
+# Копируем стандартный аватар, если его нет
+default_avatar = os.path.join(app.config['UPLOAD_FOLDER'], 'default.jpg')
+if not os.path.exists(default_avatar):
+    # Создаем пустое изображение 200x200 серого цвета
+    img = Image.new('RGB', (200, 200), color='#cccccc')
+    # Сохраняем как default.jpg
+    img.save(default_avatar)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+MAX_IMAGE_SIZE = (300, 300)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def process_avatar(file):
+    # Читаем изображение
+    image = Image.open(file)
+    
+    # Конвертируем в RGB если нужно
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    
+    # Изменяем размер, сохраняя пропорции
+    image.thumbnail(MAX_IMAGE_SIZE)
+    
+    # Создаем буфер для сохранения
+    img_buffer = io.BytesIO()
+    
+    # Сохраняем с оптимизацией качества
+    image.save(img_buffer, format='JPEG', quality=85, optimize=True)
+    
+    return img_buffer.getvalue()
+
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -19,6 +64,22 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', backref='author', lazy=True)
     date_registered = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     is_admin = db.Column(db.Boolean, default=False)
+    # Новые поля для профиля
+    avatar = db.Column(db.String(200), nullable=True, default='avatars/default.jpg')
+    bio = db.Column(db.Text, nullable=True)
+    last_seen = db.Column(db.DateTime, nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+    website = db.Column(db.String(200), nullable=True)
+
+    def get_posts_count(self):
+        return len(self.posts)
+
+    def get_comments_count(self):
+        return len(self.comments)
+
+    def update_last_seen(self):
+        self.last_seen = datetime.utcnow()
+        db.session.commit()
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -76,11 +137,18 @@ def register():
             flash('Этот email уже зарегистрирован', 'danger')
             return redirect(url_for('register'))
         
-        user = User(username=username, email=email, password=password)
-        db.session.add(user)
+        new_user = User(
+            username=username,
+            email=email,
+            password=password,
+            avatar='avatars/default.jpg'  # Явно устанавливаем стандартный аватар
+        )
+        db.session.add(new_user)
         db.session.commit()
-        flash('Регистрация успешна! Теперь вы можете войти', 'success')
+        
+        flash('Регистрация успешна! Теперь вы можете войти.', 'success')
         return redirect(url_for('login'))
+    
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -142,6 +210,54 @@ def edit_post(post_id):
 def logout():
     logout_user()
     return redirect(url_for('home'))
+
+@app.route('/profile/<username>')
+def profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = Post.query.filter_by(author=user).order_by(Post.date_posted.desc()).all()
+    if current_user.is_authenticated and current_user.username == username:
+        user.update_last_seen()
+    return render_template('profile.html', user=user, posts=posts)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    if request.method == 'POST':
+        current_user.bio = request.form.get('bio')
+        current_user.location = request.form.get('location')
+        current_user.website = request.form.get('website')
+        
+        avatar = request.files.get('avatar')
+        if avatar and allowed_file(avatar.filename):
+            try:
+                # Обрабатываем и сохраняем аватар
+                processed_image = process_avatar(avatar)
+                
+                # Генерируем уникальное имя файла
+                filename = secure_filename(f"{current_user.username}_{int(time.time())}.jpg")
+                avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                
+                # Сохраняем обработанное изображение
+                with open(avatar_path, 'wb') as f:
+                    f.write(processed_image)
+                
+                # Обновляем путь к аватару в базе данных
+                current_user.avatar = f"avatars/{filename}"
+                
+                flash('Аватар успешно обновлен!', 'success')
+            except Exception as e:
+                flash('Ошибка при обработке изображения. Попробуйте другой файл.', 'danger')
+        
+        db.session.commit()
+        flash('Профиль успешно обновлен!', 'success')
+        return redirect(url_for('profile', username=current_user.username))
+    
+    return render_template('edit_profile.html')
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.update_last_seen()
 
 def create_admin():
     with app.app_context():
