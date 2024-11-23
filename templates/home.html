@@ -7,27 +7,34 @@
     <div class="col-md-8">
         <h1 class="mb-4">Последние посты</h1>
         {% for post in posts %}
-        <div class="card post-card">
+        <div class="card post-card mb-4">
             <div class="card-body">
                 <h5 class="card-title">{{ post.title }}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">
-                    <i class="bi bi-person"></i> {{ post.author.username }} 
+                <p class="text-muted">
+                    <span class="username-with-badge">
+                        <i class="bi bi-person"></i> {{ post.author.username }}
+                        {% if post.author.is_admin %}
+                            <span class="admin-icon" title="Администратор">👑</span>
+                        {% endif %}
+                    </span>
                     <i class="bi bi-clock ms-2"></i> {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
-                </h6>
+                    <i class="bi bi-chat ms-2"></i> {{ post.comments|length }} комментариев
+                </p>
                 <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">
-                        <i class="bi bi-book"></i> Читать далее
-                    </a>
-                    <div class="text-muted">
-                        <i class="bi bi-chat"></i> {{ post.comments|length }} комментариев
-                    </div>
-                </div>
+                <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary">
+                    <i class="bi bi-book"></i> Читать далее
+                </a>
             </div>
         </div>
         {% else %}
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Пока нет ни одного поста. Будьте первым!
+        <div class="text-center my-5">
+            <i class="bi bi-journal-x display-1 text-muted"></i>
+            <h3 class="mt-3">Пока нет ни одного поста</h3>
+            {% if current_user.is_authenticated %}
+                <p>Будьте первым! <a href="{{ url_for('new_post') }}">Создать пост</a></p>
+            {% else %}
+                <p><a href="{{ url_for('login') }}">Войдите</a>, чтобы создать первый пост</p>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
