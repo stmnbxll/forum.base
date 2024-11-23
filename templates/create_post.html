@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Создать пост{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">
+                    <i class="bi bi-plus-circle"></i> Создать новый пост
+                </h2>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="bi bi-type"></i> Заголовок
+                        </label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">
+                            <i class="bi bi-text-paragraph"></i> Содержание
+                        </label>
+                        <textarea class="form-control" id="content" name="content" rows="6" required></textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Опубликовать
+                        </button>
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

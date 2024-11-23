@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать пост{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Редактировать пост</h2>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Заголовок</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ post.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Содержание</label>
+                        <textarea class="form-control" id="content" name="content" rows="6" required>{{ post.content }}</textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                        <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

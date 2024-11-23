@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">
+                    <i class="bi bi-box-arrow-in-right"></i> Вход
+                </h2>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person"></i> Имя пользователя
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="bi bi-key"></i> Пароль
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти
+                        </button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <p>Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
