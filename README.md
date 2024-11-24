@@ -123,7 +123,7 @@ forum.base/
 ## Об авторе
 
 <div align="center">
-  <img src="https://avatars.githubusercontent.com/u/113710891" width="200" style="border-radius: 50%;" alt="stmnbxll">
+  <img src="https://avatars.githubusercontent.com/u/184257094?v=4" width="200" style="border-radius: 50%;" alt="stmnbxll">
   
   ### stmnbxll
   
