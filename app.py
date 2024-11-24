@@ -81,13 +81,25 @@ class User(UserMixin, db.Model):
         self.last_seen = datetime.utcnow()
         db.session.commit()
 
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.String(200))
+    icon = db.Column(db.String(20))  # Эмодзи для категории
+    slug = db.Column(db.String(50), unique=True, nullable=False)  # URL-friendly имя
+    posts = db.relationship('Post', backref='category', lazy=True)
+
+    def __repr__(self):
+        return f'<Category {self.name}>'
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    comments = db.relationship('Comment', backref='post', lazy=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)  # Добавляем связь с категорией
+    comments = db.relationship('Comment', backref='post', lazy=True, cascade='all, delete-orphan')
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -102,21 +114,46 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    posts = Post.query.order_by(Post.date_posted.desc()).all()
-    return render_template('home.html', posts=posts)
+    page = request.args.get('page', 1, type=int)
+    category_slug = request.args.get('category')
+    
+    if category_slug:
+        category = Category.query.filter_by(slug=category_slug).first_or_404()
+        posts = Post.query.filter_by(category_id=category.id)
+    else:
+        posts = Post.query
+    
+    posts = posts.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
+    categories = Category.query.all()
+    
+    return render_template('home.html', posts=posts, categories=categories, Post=Post)
 
 @app.route('/post/new', methods=['GET', 'POST'])
 @login_required
 def new_post():
+    categories = Category.query.all()
     if request.method == 'POST':
         title = request.form['title']
         content = request.form['content']
-        post = Post(title=title, content=content, author=current_user)
+        category_id = request.form['category']
+        
+        if not title or not content or not category_id:
+            flash('Пожалуйста, заполните все поля', 'danger')
+            return render_template('create_post.html', categories=categories)
+        
+        post = Post(
+            title=title,
+            content=content,
+            author=current_user,
+            category_id=category_id
+        )
         db.session.add(post)
         db.session.commit()
-        flash('Ваш пост успешно создан!', 'success')
-        return redirect(url_for('home'))
-    return render_template('create_post.html')
+        
+        flash('Пост успешно создан!', 'success')
+        return redirect(url_for('post', post_id=post.id))
+    
+    return render_template('create_post.html', categories=categories)
 
 @app.route('/post/<int:post_id>')
 def post(post_id):
@@ -254,6 +291,14 @@ def edit_profile():
     
     return render_template('edit_profile.html')
 
+@app.route('/category/<string:slug>')
+def category(slug):
+    category = Category.query.filter_by(slug=slug).first_or_404()
+    posts = Post.query.filter_by(category_id=category.id)\
+        .order_by(Post.date_posted.desc())\
+        .all()
+    return render_template('category.html', category=category, posts=posts)
+
 @app.before_request
 def before_request():
     if current_user.is_authenticated:
@@ -282,6 +327,52 @@ def create_admin():
             )
             db.session.add(admin)
             db.session.commit()
+
+def create_default_categories():
+    categories = [
+        {
+            'name': 'Игры',
+            'description': 'Обсуждение игр и игровой индустрии',
+            'icon': '🎮',
+            'slug': 'games'
+        },
+        {
+            'name': 'Технологии',
+            'description': 'Обсуждение технологий, программирования и железа',
+            'icon': '💻',
+            'slug': 'tech'
+        },
+        {
+            'name': 'Творчество',
+            'description': 'Арт, музыка, видео и литературa',
+            'icon': '🎨',
+            'slug': 'art'
+        },
+        {
+            'name': 'Общение',
+            'description': 'Знакомства, флудилка, новости и юмор',
+            'icon': '🌍',
+            'slug': 'social'
+        },
+        {
+            'name': 'Помощь',
+            'description': 'Вопросы по форуму и техподдержка',
+            'icon': '💡',
+            'slug': 'help'
+        }
+    ]
+    
+    for cat_data in categories:
+        if not Category.query.filter_by(slug=cat_data['slug']).first():
+            category = Category(
+                name=cat_data['name'],
+                description=cat_data['description'],
+                icon=cat_data['icon'],
+                slug=cat_data['slug']
+            )
+            db.session.add(category)
+    
+    db.session.commit()
 
 @app.route('/admin')
 @login_required
@@ -347,5 +438,6 @@ def admin_delete_post(post_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        create_default_categories()  # Создаем категории при запуске
         create_admin()
     app.run(debug=True)

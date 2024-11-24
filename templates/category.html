@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Главная</a></li>
+            <li class="breadcrumb-item active">{{ category.icon }} {{ category.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="category-header mb-4">
+                <h1>{{ category.icon }} {{ category.name }}</h1>
+                <p class="text-muted">{{ category.description }}</p>
+            </div>
+
+            {% if posts %}
+                {% for post in posts %}
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{{ url_for('profile', username=post.author.username) }}" class="text-decoration-none text-dark">
+                                <img src="{{ url_for('static', filename=post.author.avatar) }}" 
+                                     class="rounded-circle me-2" 
+                                     style="width: 32px; height: 32px; object-fit: cover;" 
+                                     alt="Avatar">
+                                {{ post.author.username }}
+                            </a>
+                            {% if post.author.is_admin %}
+                                <span class="admin-icon" title="Администратор">👑</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="{{ url_for('post', post_id=post.id) }}" class="text-decoration-none text-dark">
+                                {{ post.title }}
+                            </a>
+                        </h5>
+                        <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('post', post_id=post.id) }}" class="btn btn-primary btn-sm">
+                                Читать далее
+                            </a>
+                            <small class="text-muted">
+                                <i class="bi bi-chat"></i> {{ post.comments|length }} комментариев
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> В этой категории пока нет постов. Будьте первым!
+                </div>
+            {% endif %}
+
+            {% if current_user.is_authenticated %}
+                <div class="mb-4">
+                    <a href="{{ url_for('create_post') }}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Создать пост в этой категории
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Категории</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for cat in categories %}
+                    <a href="{{ url_for('category', slug=cat.slug) }}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+                              {% if cat.id == category.id %}active{% endif %}">
+                        <span>{{ cat.icon }} {{ cat.name }}</span>
+                        <span class="badge bg-primary rounded-pill">
+                            {{ cat.posts|length }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
