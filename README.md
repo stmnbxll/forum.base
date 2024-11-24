@@ -128,7 +128,7 @@ forum.base/
   ### stmnbxll
   
   [![GitHub](https://img.shields.io/badge/GitHub-stmnbxll-181717?style=for-the-badge&logo=github)](https://github.com/stmnbxll)
-  [![Telegram](https://img.shields.io/badge/Telegram-@trueffet-2CA5E0?style=for-the-badge&logo=telegram)](https://t.me/stmnbxll)
+  [![Telegram](https://img.shields.io/badge/Telegram-@trueffet-2CA5E0?style=for-the-badge&logo=telegram)](https://t.me/trueffet)
   
   > Студент-разработчик, увлеченный веб-технологиями и созданием удобных пользовательских интерфейсов. 
   > Этот проект был создан как часть обучения современной веб-разработке с использованием Python и Flask.
