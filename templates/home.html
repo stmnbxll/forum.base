@@ -43,10 +43,13 @@
                                  style="width: 32px; height: 32px; object-fit: cover;" 
                                  alt="Avatar">
                             {{ post.author.username }}
+                            {% if post.author.is_admin %}
+                            <i class="bi bi-person-fill-gear admin-icon" title="Администратор"></i>
+                            {% endif %}
+                            {% if post.author.is_verified %}
+                            <i class="bi bi-patch-check-fill verified-icon" title="Верифицированный пользователь"></i>
+                            {% endif %}
                         </a>
-                        {% if post.author.is_admin %}
-                            <span class="admin-icon" title="Администратор">👑</span>
-                        {% endif %}
                     </div>
                     <div class="text-muted">
                         <a href="{{ url_for('category', slug=post.category.slug) }}" 

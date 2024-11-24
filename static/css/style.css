@@ -1,0 +1,13 @@
+.admin-icon {
+    color: #ffc107;
+    cursor: help;
+    margin: 0 2px;
+    font-size: 1.1em;
+}
+
+.verified-icon {
+    color: #1e90ff;
+    cursor: help;
+    margin: 0 2px;
+    font-size: 1.1em;
+}

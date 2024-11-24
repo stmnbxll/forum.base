@@ -64,6 +64,7 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', backref='author', lazy=True)
     date_registered = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     is_admin = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)  # Добавляем поле верификации
     # Новые поля для профиля
     avatar = db.Column(db.String(200), nullable=True, default='avatars/default.jpg')
     bio = db.Column(db.Text, nullable=True)
@@ -378,8 +379,9 @@ def create_default_categories():
 @login_required
 def admin_panel():
     if not current_user.is_admin:
-        flash('У вас нет прав доступа к панели администратора', 'danger')
+        flash('У вас нет прав для доступа к панели администратора', 'danger')
         return redirect(url_for('home'))
+    
     users = User.query.all()
     posts = Post.query.all()
     comments = Comment.query.all()
@@ -413,12 +415,32 @@ def toggle_admin(user_id):
         return redirect(url_for('home'))
     
     user = User.query.get_or_404(user_id)
-    if user == current_user:
-        flash('Вы не можете изменить свои права администратора', 'danger')
-    else:
-        user.is_admin = not user.is_admin
+    if user != current_user:
+        was_admin = user.is_admin
+        user.is_admin = not was_admin
+        if user.is_admin:  # Если пользователь становится админом
+            user.is_verified = True  # Автоматически верифицируем его
         db.session.commit()
         flash(f"{'Права администратора добавлены' if user.is_admin else 'Права администратора удалены'}", 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/user/<int:user_id>/toggle_verification', methods=['POST'])
+@login_required
+def toggle_verification(user_id):
+    if not current_user.is_admin:
+        flash('У вас нет прав для этого действия', 'danger')
+        return redirect(url_for('home'))
+    
+    user = User.query.get_or_404(user_id)
+    if user.is_admin:
+        flash('Нельзя изменить верификацию администратора', 'warning')
+        return redirect(url_for('admin_panel'))
+    
+    user.is_verified = not user.is_verified
+    db.session.commit()
+    
+    action = "верифицирован" if user.is_verified else "снята верификация"
+    flash(f'Пользователь {user.username} успешно {action}', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/post/<int:post_id>/delete', methods=['POST'])

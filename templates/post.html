@@ -23,7 +23,10 @@
                         {{ post.author.username }}
                     </a>
                     {% if post.author.is_admin %}
-                        <span class="admin-icon" title="Администратор">👑</span>
+                        <i class="bi bi-person-fill-gear admin-icon" title="Администратор"></i>
+                    {% endif %}
+                    {% if post.author.is_verified %}
+                        <i class="bi bi-patch-check-fill verified-icon" title="Верифицирован"></i>
                     {% endif %}
                 </div>
                 <small class="text-muted">
@@ -78,7 +81,10 @@
                                 {{ comment.author.username }}
                             </a>
                             {% if comment.author.is_admin %}
-                                <span class="admin-icon ms-1" title="Администратор">👑</span>
+                                <i class="bi bi-person-fill-gear admin-icon ms-1" title="Администратор"></i>
+                            {% endif %}
+                            {% if comment.author.is_verified %}
+                                <i class="bi bi-patch-check-fill verified-icon ms-1" title="Верифицирован"></i>
                             {% endif %}
                             <small class="text-muted ms-2">{{ comment.date_posted.strftime('%d.%m.%Y %H:%M') }}</small>
                         </div>

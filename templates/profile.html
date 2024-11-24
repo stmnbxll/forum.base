@@ -13,12 +13,15 @@
                      style="height: 300px; object-fit: cover;"
                      alt="Аватар">
                 <div class="card-body">
-                    <h4 class="card-title d-flex align-items-center">
+                    <h2 class="mb-3">
                         {{ user.username }}
                         {% if user.is_admin %}
-                            <span class="admin-icon" title="Администратор">👑</span>
+                        <i class="bi bi-person-fill-gear admin-icon" title="Администратор"></i>
                         {% endif %}
-                    </h4>
+                        {% if user.is_verified %}
+                        <i class="bi bi-patch-check-fill verified-icon" title="Верифицированный пользователь"></i>
+                        {% endif %}
+                    </h2>
                     {% if user.bio %}
                         <p class="card-text">{{ user.bio }}</p>
                     {% endif %}
